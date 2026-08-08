@@ -2,7 +2,7 @@
 &lt;h3 align="center"&gt;Lock Your AI Chatbot to Its Business. Nothing Else.&lt;/h3&gt;
 
 &lt;p align="center"&gt;
-  &lt;b&gt;Zero Cost · Open Source · 3-Layer Protection&lt;/b&gt;
+  &lt;b&gt;Zero Cost · Open Source · 3-Layer AI Protection&lt;/b&gt;
 &lt;/p&gt;
 
 &lt;p align="center"&gt;
@@ -15,7 +15,7 @@
 
 ## 🎬 What It Does
 
-Stop wasting API tokens on off-topic questions. Shield blocks prompt injection, identity leaks, and irrelevant queries **before** they reach your LLM.
+Stop wasting API tokens on off-topic questions. **Shield** blocks prompt injection, identity leaks, and irrelevant queries **before** they reach your LLM.
 
 | Attack | Result |
 |--------|--------|
@@ -28,12 +28,12 @@ Stop wasting API tokens on off-topic questions. Shield blocks prompt injection, 
 
 ## 🚀 Quick Start
 
-### Try Live Demo (No Code)
+### Try Live Demo (No Code Required)
 👉 **[shield-by-vouch.vercel.app](https://shield-by-vouch.vercel.app)**
 
 ### Use In Your Project
 
-**HTML Website (No Build Step):**
+**HTML Website:**
 ```html
 &lt;script src="https://cdn.jsdelivr.net/gh/priyamdeepanshu-a11y/shield-by-vouch/src/vouch-shield.js"&gt;&lt;/script&gt;
 &lt;script&gt;
