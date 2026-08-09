@@ -489,7 +489,6 @@
 
       await new Promise(r => setTimeout(r, 1000));
 
-      // ✅ FIX: Dynamic stats update before showing banner
       document.getElementById('finalBlocked').textContent = blocked;
       document.getElementById('finalSaved').textContent = '$' + pSaved.toFixed(3);
       document.getElementById('finalTokens').textContent = (blocked * 1400).toLocaleString();
