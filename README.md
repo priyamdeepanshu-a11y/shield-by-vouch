@@ -51,3 +51,20 @@ Stop wasting API tokens on off-topic questions. **Shield** blocks prompt injecti
     console.log("✅ Safe — send to LLM");
   }
 &lt;/script&gt;
+🟡 Option B: Python
+Step 1: Download the file. Open your terminal and type:
+curl -O https://raw.githubusercontent.com/priyamdeepanshu-a11y/shield-by-vouch/main/src/vouch-shield.py
+Step 2: In your Python file, paste this:
+from vouch_shield import VouchShield
+
+shield = VouchShield(
+    business_type="restaurant",
+    business_desc="We serve Italian food in Mumbai"
+)
+
+result = shield.check("Who are you?")
+
+if result["blocked"]:
+    print("🛡️ Blocked:", result["response"])
+else:
+    print("✅ Safe — send to LLM")
