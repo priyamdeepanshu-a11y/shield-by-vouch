@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
-    :root { --neon: #00ff41; --red: #ff0040; --bg: #030305; }
+    :root { --neon: #00ff41; --red: #ff0040; --cyan: #00f0ff; --bg: #030305; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -18,7 +18,7 @@
       position: relative;
     }
     
-    #dragon-canvas {
+    #bg-canvas {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -85,16 +85,16 @@
     }
     
     .phone {
-      background: rgba(15,15,25,0.88);
-      backdrop-filter: blur(20px);
+      background: rgba(10,10,18,0.92);
+      backdrop-filter: blur(24px);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 32px;
       overflow: hidden;
       position: relative;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,65,0.05);
     }
-    .phone.vuln { border-color: rgba(255,0,64,0.2); }
-    .phone.shield { border-color: rgba(0,255,65,0.2); }
+    .phone.vuln { border-color: rgba(255,0,64,0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(255,0,64,0.04); }
+    .phone.shield { border-color: rgba(0,255,65,0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,255,65,0.04); }
     
     .phone-header {
       padding: 20px;
@@ -235,7 +235,7 @@
 </head>
 <body>
 
-  <canvas id="dragon-canvas"></canvas>
+  <canvas id="bg-canvas"></canvas>
 
   <div class="content">
     <div class="hero">
@@ -245,7 +245,7 @@
 
     <div class="burn-bar">
       <div class="burn-label">💸 Global AI API Waste This Second</div>
-      <div class="burn-amount" id="globalBurn">$0.0000</div>
+           <div class="burn-amount" id="globalBurn">$0.0000</div>
     </div>
 
     <div class="split">
@@ -302,493 +302,258 @@
   </div>
 
   <script>
-    // ==================== THREE.JS CYBER DRAGON ====================
+    // ==================== THREE.JS CYBER BACKGROUND ====================
     (function() {
-      const canvas = document.getElementById('dragon-canvas');
+      const canvas = document.getElementById('bg-canvas');
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x030305, 0.02);
+      scene.fog = new THREE.FogExp2(0x030305, 0.015);
       
       const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 0, 25);
+      camera.position.set(0, 3, 12);
+      camera.lookAt(0, 0, 0);
       
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0x002200, 0.5);
-      scene.add(ambientLight);
+      // ===== 1. MOVING CYBER GRID FLOOR =====
+      const gridHelper = new THREE.GridHelper(60, 60, 0x00ff41, 0x003300);
+      gridHelper.position.y = -4;
+      gridHelper.material.transparent = true;
+      gridHelper.material.opacity = 0.15;
+      scene.add(gridHelper);
       
-      const dragonLight = new THREE.PointLight(0x00ff41, 1, 20);
-      scene.add(dragonLight);
+      const gridHelper2 = new THREE.GridHelper(60, 30, 0x00f0ff, 0x001111);
+      gridHelper2.position.y = -4.01;
+      gridHelper2.material.transparent = true;
+      gridHelper2.material.opacity = 0.08;
+      scene.add(gridHelper2);
       
-      // Materials
-      const bodyMat = new THREE.MeshStandardMaterial({ 
-        color: 0x001100, 
-        emissive: 0x00ff41, 
-        emissiveIntensity: 0.3,
-        roughness: 0.4,
-        metalness: 0.8,
-        transparent: true,
-        opacity: 0.9
-      });
+      // ===== 2. FLOATING SHIELD ORBS =====
+      const shieldOrbs = [];
+      const shieldGeo = new THREE.IcosahedronGeometry(0.4, 0);
       
-      const wingMembraneMat = new THREE.MeshStandardMaterial({
-        color: 0x003300,
-        emissive: 0x00ff41,
-        emissiveIntensity: 0.15,
-        roughness: 0.6,
-        metalness: 0.3,
-        transparent: true,
-        opacity: 0.6,
-        side: THREE.DoubleSide
-      });
-      
-      const boneMat = new THREE.MeshStandardMaterial({
-        color: 0x00aa33,
-        emissive: 0x004400,
-        roughness: 0.3,
-        metalness: 0.9
-      });
-      
-      const eyeMat = new THREE.MeshStandardMaterial({
-        color: 0xff0040,
-        emissive: 0xff0000,
-        emissiveIntensity: 2
-      });
-      
-      const hornMat = new THREE.MeshStandardMaterial({
-        color: 0xffaa00,
-        emissive: 0xff6600,
-        emissiveIntensity: 0.5,
-        roughness: 0.2,
-        metalness: 0.9
-      });
-      
-      const dragon = new THREE.Group();
-      scene.add(dragon);
-      
-      // ===== SPINE SYSTEM =====
-      const spineLength = 24;
-      const spinePoints = [];
-      for (let i = 0; i < spineLength; i++) spinePoints.push(new THREE.Vector3());
-      
-      // ===== HEAD (Detailed) =====
-      const headGroup = new THREE.Group();
-      
-      // Skull - elongated dodecahedron
-      const skull = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6, 1), bodyMat);
-      skull.scale.set(1, 0.8, 1.4);
-      headGroup.add(skull);
-      
-      // Snout
-      const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 1.0, 8), bodyMat);
-      snout.rotation.x = Math.PI / 2;
-      snout.position.z = 1.1;
-      headGroup.add(snout);
-      
-      // Lower jaw
-      const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.9), bodyMat);
-      jaw.position.set(0, -0.35, 0.7);
-      jaw.rotation.x = 0.15;
-      headGroup.add(jaw);
-      
-      // Eyes
-      const eyeGeo = new THREE.SphereGeometry(0.15, 16, 16);
-      const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-      leftEye.position.set(-0.35, 0.15, 0.4);
-      headGroup.add(leftEye);
-      
-      const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-      rightEye.position.set(0.35, 0.15, 0.4);
-      headGroup.add(rightEye);
-      
-      // Eye glow lights
-      const leftEyeLight = new THREE.PointLight(0xff0040, 0.5, 3);
-      leftEyeLight.position.copy(leftEye.position);
-      headGroup.add(leftEyeLight);
-      
-      const rightEyeLight = new THREE.PointLight(0xff0040, 0.5, 3);
-      rightEyeLight.position.copy(rightEye.position);
-      headGroup.add(rightEyeLight);
-      
-      // Horns (curved using tube)
-      function createHorn(points) {
-        const curve = new THREE.CatmullRomCurve3(points);
-        return new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.06, 6, false), hornMat);
-      }
-      
-      const leftHorn = createHorn([
-        new THREE.Vector3(-0.3, 0.4, -0.3),
-        new THREE.Vector3(-0.5, 0.9, -0.5),
-        new THREE.Vector3(-0.7, 1.3, -0.8)
-      ]);
-      headGroup.add(leftHorn);
-      
-      const rightHorn = createHorn([
-        new THREE.Vector3(0.3, 0.4, -0.3),
-        new THREE.Vector3(0.5, 0.9, -0.5),
-        new THREE.Vector3(0.7, 1.3, -0.8)
-      ]);
-      headGroup.add(rightHorn);
-      
-      // Nostrils
-      const nostrilGeo = new THREE.SphereGeometry(0.06, 8, 8);
-      const leftNostril = new THREE.Mesh(nostrilGeo, eyeMat);
-      leftNostril.position.set(-0.12, -0.05, 1.55);
-      headGroup.add(leftNostril);
-      const rightNostril = new THREE.Mesh(nostrilGeo, eyeMat);
-      rightNostril.position.set(0.12, -0.05, 1.55);
-      headGroup.add(rightNostril);
-      
-      dragon.add(headGroup);
-      
-      // ===== BODY (Tapered Tube Segments) =====
-      const bodySegments = [];
-      const bodyGroup = new THREE.Group();
-      dragon.add(bodyGroup);
-      
-      for (let i = 0; i < spineLength - 1; i++) {
-        const t = i / (spineLength - 1);
-        const radius = 0.5 * (1 - t * 0.7); // Taper from 0.5 to 0.15
-        
-        const seg = new THREE.Mesh(
-          new THREE.CylinderGeometry(radius * 0.85, radius, 0.7, 10),
-          bodyMat
-        );
-        seg.rotation.x = Math.PI / 2;
-        bodyGroup.add(seg);
-        bodySegments.push(seg);
-        
-        // Spikes on back
-        if (i % 2 === 0 && i < spineLength - 4) {
-          const spikeH = 0.3 + Math.random() * 0.2;
-          const spike = new THREE.Mesh(
-            new THREE.ConeGeometry(0.06, spikeH, 4),
-            hornMat
-          );
-          spike.position.y = radius + spikeH * 0.4;
-          spike.rotation.x = -0.3;
-          seg.add(spike);
-        }
-      }
-      
-      // ===== WINGS (Proper Bat Shape) =====
-      function createWing(isLeft) {
-        const wingGroup = new THREE.Group();
-        
-        // Wing membrane shape
-        const shape = new THREE.Shape();
-        shape.moveTo(0, 0);
-        shape.lineTo(0.3, 1.2);
-        shape.lineTo(1.0, 2.8);
-        shape.lineTo(2.2, 3.8);
-        shape.lineTo(3.5, 3.2);
-        shape.lineTo(4.2, 2.0);
-        shape.lineTo(3.8, 0.8);
-        shape.lineTo(2.5, 0.2);
-        shape.lineTo(1.0, -0.2);
-        shape.lineTo(0, 0);
-        
-        const membrane = new THREE.Mesh(
-          new THREE.ShapeGeometry(shape),
-          wingMembraneMat
-        );
-        wingGroup.add(membrane);
-        
-        // Wing bones (fingers)
-        const bonePositions = [
-          [0, 0, 0.3, 1.2],
-          [0, 0, 1.0, 2.8],
-          [0, 0, 2.2, 3.8],
-          [0, 0, 3.5, 3.2],
-          [0, 0, 4.2, 2.0]
-        ];
-        
-        bonePositions.forEach(([x1, y1, x2, y2]) => {
-          const len = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-          const bone = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.025, 0.015, len, 4),
-            boneMat
-          );
-          bone.position.set((x1+x2)/2, (y1+y2)/2, 0.02);
-          bone.rotation.z = Math.atan2(y2-y1, x2-x1) - Math.PI/2;
-          wingGroup.add(bone);
+      for (let i = 0; i < 25; i++) {
+        const mat = new THREE.MeshBasicMaterial({
+          color: Math.random() > 0.5 ? 0x00ff41 : 0x00f0ff,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.3
         });
-        
-        // Wing arm
-        const arm = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.06, 0.04, 1.2, 6),
-          boneMat
+        const orb = new THREE.Mesh(shieldGeo, mat);
+        orb.position.set(
+          (Math.random() - 0.5) * 30,
+          (Math.random() - 0.5) * 15,
+          (Math.random() - 0.5) * 20 - 5
         );
-        arm.position.set(-0.1, 0.5, 0.03);
-        arm.rotation.z = 0.3;
-        wingGroup.add(arm);
-        
-        if (!isLeft) wingGroup.scale.x = -1;
-        return wingGroup;
-      }
-      
-      const leftWing = createWing(true);
-      leftWing.position.set(-0.4, 0.5, -1.5);
-      dragon.add(leftWing);
-      
-      const rightWing = createWing(false);
-      rightWing.position.set(0.4, 0.5, -1.5);
-      dragon.add(rightWing);
-      
-      // ===== LEGS =====
-      function createLeg(x, y, z, scale) {
-        const leg = new THREE.Group();
-        
-        // Thigh
-        const thigh = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.1, 0.08, 0.6, 6),
-          bodyMat
-        );
-        thigh.rotation.x = 0.6;
-        thigh.position.y = -0.2;
-        leg.add(thigh);
-        
-        // Shin
-        const shin = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.07, 0.05, 0.5, 6),
-          bodyMat
-        );
-        shin.position.set(0, -0.55, 0.15);
-        shin.rotation.x = -0.4;
-        leg.add(shin);
-        
-        // Foot
-        const foot = new THREE.Mesh(
-          new THREE.BoxGeometry(0.2, 0.08, 0.25),
-          bodyMat
-        );
-        foot.position.set(0, -0.8, 0.25);
-        leg.add(foot);
-        
-        // Claws
-        for (let c = -1; c <= 1; c++) {
-          const claw = new THREE.Mesh(
-            new THREE.ConeGeometry(0.03, 0.15, 4),
-            hornMat
-          );
-          claw.position.set(c * 0.06, -0.88, 0.35);
-          claw.rotation.x = -0.5;
-          leg.add(claw);
-        }
-        
-        leg.position.set(x, y, z);
-        leg.scale.setScalar(scale);
-        return leg;
-      }
-      
-      const legs = [
-        createLeg(-0.4, -0.3, -1.8, 1),
-        createLeg(0.4, -0.3, -1.8, 1),
-        createLeg(-0.35, -0.25, -5.5, 0.85),
-        createLeg(0.35, -0.25, -5.5, 0.85)
-      ];
-      legs.forEach(l => dragon.add(l));
-      
-      // ===== FIRE BREATH PARTICLE SYSTEM =====
-      const fireCanvas = document.createElement('canvas');
-      fireCanvas.width = 64; fireCanvas.height = 64;
-      const fctx = fireCanvas.getContext('2d');
-      const grad = fctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 200, 1)');
-      grad.addColorStop(0.2, 'rgba(255, 200, 50, 1)');
-      grad.addColorStop(0.5, 'rgba(255, 100, 0, 0.8)');
-      grad.addColorStop(1, 'rgba(100, 0, 0, 0)');
-      fctx.fillStyle = grad;
-      fctx.fillRect(0, 0, 64, 64);
-      
-      const fireTexture = new THREE.CanvasTexture(fireCanvas);
-      const fireMaterial = new THREE.SpriteMaterial({ 
-        map: fireTexture, 
-        transparent: true, 
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      
-      const fireParticles = [];
-      const maxFireParticles = 80;
-      
-      function spawnFire() {
-        for (let i = 0; i < 3; i++) {
-          const sprite = new THREE.Sprite(fireMaterial.clone());
-          // Get mouth position in world space
-          const mouthPos = new THREE.Vector3(0, -0.1, 1.7);
-          mouthPos.applyMatrix4(headGroup.matrixWorld);
-          
-          sprite.position.copy(mouthPos);
-          sprite.position.x += (Math.random() - 0.5) * 0.15;
-          sprite.position.y += (Math.random() - 0.5) * 0.1;
-          
-          const spread = 0.15;
-          sprite.userData = {
-            velocity: new THREE.Vector3(
-              (Math.random() - 0.5) * spread,
-              (Math.random() - 0.5) * spread,
-              0.4 + Math.random() * 0.3
-            ),
-            life: 1.0,
-            decay: 0.015 + Math.random() * 0.015,
-            grow: 1.0
-          };
-          
-          sprite.scale.setScalar(0.3);
-          scene.add(sprite);
-          fireParticles.push(sprite);
-          
-          if (fireParticles.length > maxFireParticles) {
-            const old = fireParticles.shift();
-            scene.remove(old);
-          }
-        }
-      }
-      
-      // Smoke particles
-      const smokeCanvas = document.createElement('canvas');
-      smokeCanvas.width = 64; smokeCanvas.height = 64;
-      const sctx = smokeCanvas.getContext('2d');
-      const sgrad = sctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      sgrad.addColorStop(0, 'rgba(100, 100, 100, 0.5)');
-      sgrad.addColorStop(1, 'rgba(50, 50, 50, 0)');
-      sctx.fillStyle = sgrad;
-      sctx.fillRect(0, 0, 64, 64);
-      const smokeTexture = new THREE.CanvasTexture(smokeCanvas);
-      const smokeMaterial = new THREE.SpriteMaterial({ 
-        map: smokeTexture, 
-        transparent: true, 
-        blending: THREE.NormalBlending,
-        depthWrite: false
-      });
-      const smokeParticles = [];
-      
-      function spawnSmoke() {
-        if (smokeParticles.length > 40) return;
-        const sprite = new THREE.Sprite(smokeMaterial.clone());
-        const mouthPos = new THREE.Vector3(0, 0.1, 1.5);
-        mouthPos.applyMatrix4(headGroup.matrixWorld);
-        sprite.position.copy(mouthPos);
-        sprite.userData = {
-          velocity: new THREE.Vector3((Math.random()-0.5)*0.05, 0.1, 0.1),
-          life: 1.0,
-          decay: 0.008
+        orb.userData = {
+          speed: 0.005 + Math.random() * 0.01,
+          rotSpeed: { x: Math.random()*0.02, y: Math.random()*0.02 },
+          floatOffset: Math.random() * Math.PI * 2,
+          floatSpeed: 0.5 + Math.random() * 0.5
         };
-        sprite.scale.setScalar(0.5);
-        scene.add(sprite);
-        smokeParticles.push(sprite);
+        scene.add(orb);
+        shieldOrbs.push(orb);
+        
+        // Glow sprite behind each orb
+        const glowCanvas = document.createElement('canvas');
+        glowCanvas.width = 64; glowCanvas.height = 64;
+        const gctx = glowCanvas.getContext('2d');
+        const ggrad = gctx.createRadialGradient(32,32,0,32,32,32);
+        ggrad.addColorStop(0, 'rgba(0,255,65,0.3)');
+        ggrad.addColorStop(1, 'rgba(0,0,0,0)');
+        gctx.fillStyle = ggrad;
+        gctx.fillRect(0,0,64,64);
+        const glowTex = new THREE.CanvasTexture(glowCanvas);
+        const glowMat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending });
+        const glow = new THREE.Sprite(glowMat);
+        glow.scale.setScalar(2);
+        orb.add(glow);
       }
       
-      // ===== FLIGHT DYNAMICS =====
-      let flightTime = 0;
+      // ===== 3. PARTICLE NETWORK (Nodes + Lines) =====
+      const nodeCount = 40;
+      const nodes = [];
+      const nodeGeo = new THREE.SphereGeometry(0.06, 8, 8);
+      const nodeMat = new THREE.MeshBasicMaterial({ color: 0x00ff41, transparent: true, opacity: 0.6 });
       
-      function updateFlight() {
-        flightTime += 0.008;
-        
-        // Complex 3D flight path
-        const r = 14;
-        const x = Math.sin(flightTime * 0.7) * r;
-        const y = Math.sin(flightTime * 1.3) * 3 + Math.cos(flightTime * 0.5) * 2;
-        const z = Math.cos(flightTime * 0.9) * r * 0.6;
-        
-        dragon.position.set(x, y, z);
-        
-        // Look ahead
-        const nextT = flightTime + 0.05;
-        const nextX = Math.sin(nextT * 0.7) * r;
-        const nextY = Math.sin(nextT * 1.3) * 3 + Math.cos(nextT * 0.5) * 2;
-        const nextZ = Math.cos(nextT * 0.9) * r * 0.6;
-        dragon.lookAt(nextX, nextY, nextZ);
-        
-        // Bank into turns
-        const bankAngle = Math.cos(flightTime * 0.7) * 0.4;
-        dragon.rotateZ(bankAngle);
-        
-        // Wing flap
-        const flapSpeed = 6;
-        const flapAmp = 0.35;
-        leftWing.rotation.z = Math.sin(flightTime * flapSpeed) * flapAmp;
-        rightWing.rotation.z = -Math.sin(flightTime * flapSpeed) * flapAmp;
-        
-        // Update dragon light position
-        dragonLight.position.copy(dragon.position);
-        
-        // Update spine/body segments to follow head with delay
-        const headWorld = new THREE.Vector3();
-        headGroup.getWorldPosition(headWorld);
-        
-        for (let i = 0; i < bodySegments.length; i++) {
-          const delay = (i + 1) * 0.12;
-          const t = flightTime - delay;
-          
-          const bx = Math.sin(t * 0.7) * r;
-          const by = Math.sin(t * 1.3) * 3 + Math.cos(t * 0.5) * 2;
-          const bz = Math.cos(t * 0.9) * r * 0.6;
-          
-          bodySegments[i].position.set(bx, by, bz);
-          
-          // Orient segment
-          if (i === 0) {
-            bodySegments[i].lookAt(headWorld);
-          } else {
-            bodySegments[i].lookAt(bodySegments[i-1].position);
-          }
-        }
-        
-        // Update legs to follow body
-        legs[0].position.copy(bodySegments[2].position);
-        legs[0].rotation.copy(bodySegments[2].rotation);
-        legs[1].position.copy(bodySegments[2].position);
-        legs[1].rotation.copy(bodySegments[2].rotation);
-        legs[1].rotateY(Math.PI);
-        
-        legs[2].position.copy(bodySegments[10].position);
-        legs[2].rotation.copy(bodySegments[10].rotation);
-        legs[3].position.copy(bodySegments[10].position);
-        legs[3].rotation.copy(bodySegments[10].rotation);
-        legs[3].rotateY(Math.PI);
-        
-        // Fire breath
-        if (Math.sin(flightTime * 2) > 0.6) spawnFire();
-        if (Math.random() > 0.7) spawnSmoke();
-        
-        // Update fire
-        for (let i = fireParticles.length - 1; i >= 0; i--) {
-          const p = fireParticles[i];
-          p.position.add(p.userData.velocity);
-          p.userData.velocity.y += 0.005; // rise
-          p.userData.life -= p.userData.decay;
-          p.material.opacity = p.userData.life;
-          p.scale.setScalar(0.3 + (1 - p.userData.life) * 1.5);
-          
-          if (p.userData.life <= 0) {
-            scene.remove(p);
-            fireParticles.splice(i, 1);
-          }
-        }
-        
-        // Update smoke
-        for (let i = smokeParticles.length - 1; i >= 0; i--) {
-          const p = smokeParticles[i];
-          p.position.add(p.userData.velocity);
-          p.userData.life -= p.userData.decay;
-          p.material.opacity = p.userData.life * 0.4;
-          p.scale.setScalar(0.5 + (1 - p.userData.life) * 2);
-          
-          if (p.userData.life <= 0) {
-            scene.remove(p);
-            smokeParticles.splice(i, 1);
-          }
-        }
+      for (let i = 0; i < nodeCount; i++) {
+        const node = new THREE.Mesh(nodeGeo, nodeMat.clone());
+        node.position.set(
+          (Math.random() - 0.5) * 40,
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 30 - 10
+        );
+        node.userData = {
+          velocity: new THREE.Vector3((Math.random()-0.5)*0.01, (Math.random()-0.5)*0.01, (Math.random()-0.5)*0.01),
+          basePos: node.position.clone()
+        };
+        scene.add(node);
+        nodes.push(node);
       }
+      
+      // Lines between close nodes
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x00ff41, transparent: true, opacity: 0.1 });
+      const lineGeo = new THREE.BufferGeometry();
+      const linePositions = new Float32Array(nodeCount * nodeCount * 6);
+      lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+      const networkLines = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(networkLines);
+      
+      // ===== 4. HORIZONTAL LASER SCAN LINES =====
+      const lasers = [];
+      const laserGeo = new THREE.PlaneGeometry(40, 0.03);
+      for (let i = 0; i < 5; i++) {
+        const laserMat = new THREE.MeshBasicMaterial({
+          color: i % 2 === 0 ? 0x00ff41 : 0xff0040,
+          transparent: true,
+          opacity: 0.15,
+          side: THREE.DoubleSide
+        });
+        const laser = new THREE.Mesh(laserGeo, laserMat);
+        laser.position.set(0, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10);
+        laser.userData = { speed: 0.02 + Math.random() * 0.03, direction: Math.random() > 0.5 ? 1 : -1 };
+        scene.add(laser);
+        lasers.push(laser);
+      }
+      
+      // ===== 5. FLOATING HEXAGONS =====
+      const hexShape = new THREE.Shape();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const x = Math.cos(angle) * 0.5;
+        const y = Math.sin(angle) * 0.5;
+        i === 0 ? hexShape.moveTo(x, y) : hexShape.lineTo(x, y);
+      }
+      hexShape.closePath();
+      
+      const hexGeo = new THREE.ShapeGeometry(hexShape);
+      const hexMat = new THREE.MeshBasicMaterial({ color: 0x00ff41, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
+      const hexagons = [];
+      
+      for (let i = 0; i < 15; i++) {
+        const hex = new THREE.Mesh(hexGeo, hexMat.clone());
+        hex.position.set(
+          (Math.random() - 0.5) * 35,
+          (Math.random() - 0.5) * 18,
+          (Math.random() - 0.5) * 25 - 8
+        );
+        hex.rotation.x = Math.random() * Math.PI;
+        hex.rotation.y = Math.random() * Math.PI;
+        hex.userData = { rotSpeed: { x: Math.random()*0.005, y: Math.random()*0.005 }, floatSpeed: 0.3 + Math.random()*0.4, offset: Math.random()*10 };
+        scene.add(hex);
+        hexagons.push(hex);
+      }
+      
+      // ===== 6. AURORA ENERGY WAVES =====
+      const waveCanvas = document.createElement('canvas');
+      waveCanvas.width = 256; waveCanvas.height = 1;
+      const wctx = waveCanvas.getContext('2d');
+      const wgrad = wctx.createLinearGradient(0,0,256,0);
+      wgrad.addColorStop(0, 'rgba(0,255,65,0)');
+      wgrad.addColorStop(0.3, 'rgba(0,255,65,0.3)');
+      wgrad.addColorStop(0.5, 'rgba(0,240,255,0.2)');
+      wgrad.addColorStop(0.7, 'rgba(0,255,65,0.3)');
+      wgrad.addColorStop(1, 'rgba(0,255,65,0)');
+      wctx.fillStyle = wgrad;
+      wctx.fillRect(0,0,256,1);
+      const waveTex = new THREE.CanvasTexture(waveCanvas);
+      const waveMat = new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, opacity: 0.12, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+      const waves = [];
+      
+      for (let i = 0; i < 3; i++) {
+        const wave = new THREE.Mesh(new THREE.PlaneGeometry(30, 8, 32, 8), waveMat.clone());
+        wave.position.set(0, -2 + i * 3, -5 - i * 3);
+        wave.rotation.x = -0.3;
+        wave.userData = { speed: 0.3 + i * 0.2, offset: i * 2 };
+        scene.add(wave);
+        waves.push(wave);
+      }
+      
+      // ===== 7. FLOATING PARTICLES (Dust) =====
+      const dustGeo = new THREE.BufferGeometry();
+      const dustCount = 300;
+      const dustPos = new Float32Array(dustCount * 3);
+      for (let i = 0; i < dustCount * 3; i++) dustPos[i] = (Math.random() - 0.5) * 50;
+      dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+      const dustMat = new THREE.PointsMaterial({ color: 0x00ff41, size: 0.05, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+      const dust = new THREE.Points(dustGeo, dustMat);
+      scene.add(dust);
       
       // ===== ANIMATION LOOP =====
+      let time = 0;
+      
       function animate() {
         requestAnimationFrame(animate);
-        updateFlight();
+        time += 0.01;
+        
+        // Move grid
+        gridHelper.position.z = (time * 2) % 2;
+        gridHelper2.position.z = (time * 1.5) % 2;
+        
+        // Animate shield orbs
+        shieldOrbs.forEach(orb => {
+          orb.rotation.x += orb.userData.rotSpeed.x;
+          orb.rotation.y += orb.userData.rotSpeed.y;
+          orb.position.y += Math.sin(time * orb.userData.floatSpeed + orb.userData.floatOffset) * 0.005;
+        });
+        
+        // Animate nodes + update network lines
+        nodes.forEach(node => {
+          node.position.add(node.userData.velocity);
+          // Keep within bounds
+          if (node.position.distanceTo(node.userData.basePos) > 3) {
+            node.userData.velocity.multiplyScalar(-1);
+          }
+        });
+        
+        let lineIdx = 0;
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dist = nodes[i].position.distanceTo(nodes[j].position);
+            if (dist < 5) {
+              const opacity = 1 - dist / 5;
+              linePositions[lineIdx++] = nodes[i].position.x;
+              linePositions[lineIdx++] = nodes[i].position.y;
+              linePositions[lineIdx++] = nodes[i].position.z;
+              linePositions[lineIdx++] = nodes[j].position.x;
+              linePositions[lineIdx++] = nodes[j].position.y;
+              linePositions[lineIdx++] = nodes[j].position.z;
+            }
+          }
+        }
+        // Clear remaining line positions
+        for (let i = lineIdx; i < linePositions.length; i++) linePositions[i] = 0;
+        lineGeo.attributes.position.needsUpdate = true;
+        
+        // Animate lasers
+        lasers.forEach(laser => {
+          laser.position.x += laser.userData.speed * laser.userData.direction;
+          if (Math.abs(laser.position.x) > 20) laser.userData.direction *= -1;
+          laser.material.opacity = 0.1 + Math.sin(time * 3) * 0.05;
+        });
+        
+        // Animate hexagons
+        hexagons.forEach(hex => {
+          hex.rotation.x += hex.userData.rotSpeed.x;
+          hex.rotation.y += hex.userData.rotSpeed.y;
+          hex.position.y += Math.sin(time * hex.userData.floatSpeed + hex.userData.offset) * 0.003;
+        });
+        
+        // Animate waves
+        waves.forEach((wave, i) => {
+          const positions = wave.geometry.attributes.position.array;
+          for (let j = 0; j < positions.length; j += 3) {
+            const x = positions[j];
+            positions[j + 1] = Math.sin(x * 0.5 + time * wave.userData.speed + wave.userData.offset) * 0.5;
+          }
+          wave.geometry.attributes.position.needsUpdate = true;
+        });
+        
+        // Animate dust
+        dust.rotation.y = time * 0.02;
+        dust.position.y = Math.sin(time * 0.2) * 0.5;
+        
         renderer.render(scene, camera);
       }
       animate();
