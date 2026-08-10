@@ -31,9 +31,9 @@ Stop wasting API tokens on off-topic questions. **Shield** blocks prompt injecti
 
 ## 📦 Use In Your Project
 
-### Option A: HTML Website (CDN)
+### 🔵 Option A: HTML Website (Simplest — No Install)
 
-No install needed. Just add this script tag:
+**Step 1:** Copy this code and paste it in your HTML file (inside `&lt;body&gt;` tag):
 
 ```html
 &lt;script src="https://cdn.jsdelivr.net/gh/priyamdeepanshu-a11y/shield-by-vouch@main/src/vouch-shield.js"&gt;&lt;/script&gt;
@@ -47,7 +47,6 @@ No install needed. Just add this script tag:
 
   if (result.blocked) {
     console.log("🛡️ Blocked:", result.response);
-    // No API call made — money saved!
   } else {
     console.log("✅ Safe — send to LLM");
   }
