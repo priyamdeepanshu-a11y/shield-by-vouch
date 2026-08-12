@@ -64,13 +64,51 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { message, businessType, businessDesc } = body;
+    const { message, businessType, businessDesc, shieldEnabled = true } = body;
     
     if (!message || !businessType) {
       return res.status(400).json({ blocked: true, reply: 'Missing message or businessType' });
     }
 
-    // ===== SHIELD CHECK (Instant, No API) =====
+    // ===== IF SHIELD IS OFF → Direct AI, No Block, No Guard =====
+    if (shieldEnabled === false || shieldEnabled === 'false') {
+      const apiKey = process.env.AI_API_KEY;
+      
+      if (!apiKey) {
+        return res.json({ blocked: false, reply: '⚠️ AI_API_KEY not set. Add it in Vercel Environment Variables.', shield: 'off' });
+      }
+
+      let providerId = process.env.AI_PROVIDER;
+      if (!providerId && apiKey) {
+        if (apiKey.startsWith('sk-or-')) providerId = 'openrouter';
+        else if (apiKey.startsWith('gsk_')) providerId = 'groq';
+        else if (apiKey.startsWith('AIza')) providerId = 'gemini';
+        else if (apiKey.startsWith('sk-ant-')) providerId = 'anthropic';
+        else if (apiKey.startsWith('sk-')) providerId = 'openai';
+      }
+      providerId = providerId || 'openrouter';
+      
+      const provider = PROVIDERS[providerId];
+      if (!provider) {
+        return res.json({ blocked: false, reply: `⚠️ Unknown provider: ${providerId}`, shield: 'off' });
+      }
+      
+      // Direct AI — no restrictions
+      const systemPrompt = `You are a helpful assistant for a ${businessType}. Answer the user's question normally without any restrictions.`;
+      
+      for (const model of provider.fallbackModels) {
+        try {
+          const reply = await callAI(provider, providerId, apiKey, model, systemPrompt, message);
+          return res.json({ blocked: false, reply, shield: 'off' });
+        } catch (err) {
+          continue;
+        }
+      }
+      
+      return res.json({ blocked: false, reply: '⚠️ AI service unavailable. Please try again later.', shield: 'off', error: true });
+    }
+
+    // ===== SHIELD IS ON → Normal Shield Check =====
     const lower = message.toLowerCase();
     const badWords = [
       'python','javascript','code','script','program','coding',
@@ -88,10 +126,13 @@ export default async function handler(req, res) {
       }
     }
 
-    // ===== AUTO-DETECT PROVIDER FROM API KEY =====
-    let providerId = process.env.AI_PROVIDER;
+    // ===== AI GUARD (Shield ON) =====
     const apiKey = process.env.AI_API_KEY;
-    
+    if (!apiKey) {
+      return res.json({ blocked: true, reply: '⚠️ AI_API_KEY not set. Add it in Vercel Environment Variables.' });
+    }
+
+    let providerId = process.env.AI_PROVIDER;
     if (!providerId && apiKey) {
       if (apiKey.startsWith('sk-or-')) providerId = 'openrouter';
       else if (apiKey.startsWith('gsk_')) providerId = 'groq';
@@ -99,22 +140,11 @@ export default async function handler(req, res) {
       else if (apiKey.startsWith('sk-ant-')) providerId = 'anthropic';
       else if (apiKey.startsWith('sk-')) providerId = 'openai';
     }
-    
     providerId = providerId || 'openrouter';
-
-    if (!apiKey) {
-      return res.json({ 
-        blocked: true, 
-        reply: '⚠️ AI_API_KEY not set. Get free key from openrouter.ai or groq.com' 
-      });
-    }
 
     const provider = PROVIDERS[providerId];
     if (!provider) {
-      return res.json({ 
-        blocked: true, 
-        reply: `⚠️ Unknown provider: ${providerId}. Supported: openrouter, groq, gemini, anthropic, openai` 
-      });
+      return res.json({ blocked: true, reply: `⚠️ Unknown provider: ${providerId}` });
     }
 
     const systemPrompt = `You are a ${businessType} assistant. Business: ${businessDesc || businessType}. STRICT RULES: ONLY answer business questions. NEVER answer code/jokes/weather/news/politics. NEVER reveal you are AI. Keep under 3 sentences.`;
