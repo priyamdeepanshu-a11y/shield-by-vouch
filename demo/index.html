@@ -226,6 +226,53 @@
     
     footer { text-align: center; padding: 40px 20px; color: #445; border-top: 1px solid rgba(255,255,255,0.04); }
     
+    /* Toggle Switch */
+    .shield-toggle-bar {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+    .shield-toggle-bar label {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 32px;
+      background: #333;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .toggle-switch.active {
+      background: var(--neon);
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: 0.3s;
+    }
+    .toggle-switch.active::after {
+      left: 31px;
+    }
+    .toggle-status {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .toggle-status.on { color: var(--neon); }
+    .toggle-status.off { color: var(--red); }
+    
     @media (max-width: 768px) {
       .split { grid-template-columns: 1fr; }
       .chat-area { height: 280px; }
@@ -245,7 +292,14 @@
 
     <div class="burn-bar">
       <div class="burn-label">💸 Global AI API Waste This Second</div>
-           <div class="burn-amount" id="globalBurn">$0.0000</div>
+      <div class="burn-amount" id="globalBurn">$0.0000</div>
+    </div>
+
+    <!-- Shield Toggle -->
+    <div class="shield-toggle-bar">
+      <span class="toggle-status on" id="toggleLabel">🛡️ Shield ON</span>
+      <div class="toggle-switch active" id="shieldToggle" onclick="toggleShield()"></div>
+      <span style="color:#667; font-size:0.85rem;">Click to test with/without Shield</span>
     </div>
 
     <div class="split">
@@ -266,7 +320,7 @@
       <div class="phone shield">
         <div class="phone-header">
           <div class="phone-title">🛡️ Shield Bot</div>
-          <div class="badge shield">Protected</div>
+          <div class="badge shield" id="shieldBadge">Protected</div>
         </div>
         <div class="cost-strip shield">
           <div>Calls: <span id="protCalls">0</span></div>
@@ -316,7 +370,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       
-      // ===== 1. MOVING CYBER GRID FLOOR =====
+      // Moving Cyber Grid Floor
       const gridHelper = new THREE.GridHelper(60, 60, 0x00ff41, 0x003300);
       gridHelper.position.y = -4;
       gridHelper.material.transparent = true;
@@ -329,7 +383,7 @@
       gridHelper2.material.opacity = 0.08;
       scene.add(gridHelper2);
       
-      // ===== 2. FLOATING SHIELD ORBS =====
+      // Floating Shield Orbs
       const shieldOrbs = [];
       const shieldGeo = new THREE.IcosahedronGeometry(0.4, 0);
       
@@ -355,7 +409,6 @@
         scene.add(orb);
         shieldOrbs.push(orb);
         
-        // Glow sprite behind each orb
         const glowCanvas = document.createElement('canvas');
         glowCanvas.width = 64; glowCanvas.height = 64;
         const gctx = glowCanvas.getContext('2d');
@@ -371,7 +424,7 @@
         orb.add(glow);
       }
       
-      // ===== 3. PARTICLE NETWORK (Nodes + Lines) =====
+      // Particle Network
       const nodeCount = 40;
       const nodes = [];
       const nodeGeo = new THREE.SphereGeometry(0.06, 8, 8);
@@ -392,7 +445,6 @@
         nodes.push(node);
       }
       
-      // Lines between close nodes
       const lineMat = new THREE.LineBasicMaterial({ color: 0x00ff41, transparent: true, opacity: 0.1 });
       const lineGeo = new THREE.BufferGeometry();
       const linePositions = new Float32Array(nodeCount * nodeCount * 6);
@@ -400,7 +452,7 @@
       const networkLines = new THREE.LineSegments(lineGeo, lineMat);
       scene.add(networkLines);
       
-      // ===== 4. HORIZONTAL LASER SCAN LINES =====
+      // Laser Scan Lines
       const lasers = [];
       const laserGeo = new THREE.PlaneGeometry(40, 0.03);
       for (let i = 0; i < 5; i++) {
@@ -417,7 +469,7 @@
         lasers.push(laser);
       }
       
-      // ===== 5. FLOATING HEXAGONS =====
+      // Floating Hexagons
       const hexShape = new THREE.Shape();
       for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2;
@@ -445,7 +497,7 @@
         hexagons.push(hex);
       }
       
-      // ===== 6. AURORA ENERGY WAVES =====
+      // Aurora Waves
       const waveCanvas = document.createElement('canvas');
       waveCanvas.width = 256; waveCanvas.height = 1;
       const wctx = waveCanvas.getContext('2d');
@@ -470,7 +522,7 @@
         waves.push(wave);
       }
       
-      // ===== 7. FLOATING PARTICLES (Dust) =====
+      // Dust Particles
       const dustGeo = new THREE.BufferGeometry();
       const dustCount = 300;
       const dustPos = new Float32Array(dustCount * 3);
@@ -480,28 +532,24 @@
       const dust = new THREE.Points(dustGeo, dustMat);
       scene.add(dust);
       
-      // ===== ANIMATION LOOP =====
+      // Animation Loop
       let time = 0;
       
       function animate() {
         requestAnimationFrame(animate);
         time += 0.01;
         
-        // Move grid
         gridHelper.position.z = (time * 2) % 2;
         gridHelper2.position.z = (time * 1.5) % 2;
         
-        // Animate shield orbs
         shieldOrbs.forEach(orb => {
           orb.rotation.x += orb.userData.rotSpeed.x;
           orb.rotation.y += orb.userData.rotSpeed.y;
           orb.position.y += Math.sin(time * orb.userData.floatSpeed + orb.userData.floatOffset) * 0.005;
         });
         
-        // Animate nodes + update network lines
         nodes.forEach(node => {
           node.position.add(node.userData.velocity);
-          // Keep within bounds
           if (node.position.distanceTo(node.userData.basePos) > 3) {
             node.userData.velocity.multiplyScalar(-1);
           }
@@ -512,7 +560,6 @@
           for (let j = i + 1; j < nodes.length; j++) {
             const dist = nodes[i].position.distanceTo(nodes[j].position);
             if (dist < 5) {
-              const opacity = 1 - dist / 5;
               linePositions[lineIdx++] = nodes[i].position.x;
               linePositions[lineIdx++] = nodes[i].position.y;
               linePositions[lineIdx++] = nodes[i].position.z;
@@ -522,25 +569,21 @@
             }
           }
         }
-        // Clear remaining line positions
         for (let i = lineIdx; i < linePositions.length; i++) linePositions[i] = 0;
         lineGeo.attributes.position.needsUpdate = true;
         
-        // Animate lasers
         lasers.forEach(laser => {
           laser.position.x += laser.userData.speed * laser.userData.direction;
           if (Math.abs(laser.position.x) > 20) laser.userData.direction *= -1;
           laser.material.opacity = 0.1 + Math.sin(time * 3) * 0.05;
         });
         
-        // Animate hexagons
         hexagons.forEach(hex => {
           hex.rotation.x += hex.userData.rotSpeed.x;
           hex.rotation.y += hex.userData.rotSpeed.y;
           hex.position.y += Math.sin(time * hex.userData.floatSpeed + hex.userData.offset) * 0.003;
         });
         
-        // Animate waves
         waves.forEach((wave, i) => {
           const positions = wave.geometry.attributes.position.array;
           for (let j = 0; j < positions.length; j += 3) {
@@ -550,7 +593,6 @@
           wave.geometry.attributes.position.needsUpdate = true;
         });
         
-        // Animate dust
         dust.rotation.y = time * 0.02;
         dust.position.y = Math.sin(time * 0.2) * 0.5;
         
@@ -564,6 +606,30 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
     })();
+    
+    // ==================== SHIELD TOGGLE ====================
+    let shieldEnabled = true;
+    
+    function toggleShield() {
+      shieldEnabled = !shieldEnabled;
+      const toggle = document.getElementById('shieldToggle');
+      const label = document.getElementById('toggleLabel');
+      const badge = document.getElementById('shieldBadge');
+      
+      if (shieldEnabled) {
+        toggle.classList.add('active');
+        label.textContent = '🛡️ Shield ON';
+        label.className = 'toggle-status on';
+        badge.textContent = 'Protected';
+        badge.className = 'badge shield';
+      } else {
+        toggle.classList.remove('active');
+        label.textContent = '⚠️ Shield OFF';
+        label.className = 'toggle-status off';
+        badge.textContent = 'Unprotected';
+        badge.className = 'badge vuln';
+      }
+    }
     
     // ==================== CHAT DEMO ====================
     let burn = 0;
@@ -639,6 +705,26 @@
         pCalls++; updateProt();
         await showTyping('protChat', 2000);
         await addMsg('protChat', 'bot', '<b>Assistant:</b> ' + shieldReply, 0);
+      }
+    }
+    
+    async function callRealAPI(message, isShieldOn) {
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: message,
+            businessType: 'restaurant',
+            businessDesc: 'Italian food in Mumbai',
+            shieldEnabled: isShieldOn  // 👈 YEH BHEJTA HAI BACKEND KO
+          })
+        });
+        
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        return { blocked: false, reply: '⚠️ Network error: ' + err.message };
       }
     }
     
