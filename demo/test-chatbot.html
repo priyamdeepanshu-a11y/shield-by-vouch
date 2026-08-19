@@ -55,10 +55,6 @@
     .quick-replies { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
     .quick-replies button { background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
     .quick-replies button:hover { border-color: #00ff41; color: #00ff41; }
-
-    /* API Key Input */
-    .api-key-box { margin-bottom: 20px; }
-    .api-key-box input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -98,11 +94,6 @@
       <input type="text" id="businessType" value="restaurant" placeholder="e.g. clinic, salon, store">
       <input type="text" id="businessDesc" value="Italian food in Mumbai" placeholder="Describe your business">
     </div>
-  </div>
-
-  <!-- API Key -->
-  <div class="api-key-box">
-    <input type="password" id="apiKey" placeholder="Paste your API Key (Groq, OpenRouter, OpenAI, etc.)">
   </div>
 
   <!-- Chat Container -->
@@ -156,7 +147,7 @@
       msgDiv.className = `message ${sender} ${isBlocked ? 'blocked' : ''}`;
       
       if (sender === 'bot' && isBlocked) {
-        msgDiv.innerHTML = `<span class="shield-tag">🛡️ Shield: ️ Blocked. No API call made. $0.00 spent.</span>${text}`;
+        msgDiv.innerHTML = `<span class="shield-tag">🛡️ Shield: ⚠️ Blocked. No API call made. $0.00 spent.</span>${text}`;
       } else if (sender === 'user') {
         msgDiv.innerHTML = `<strong>You:</strong> ${text}`;
       } else {
@@ -178,9 +169,9 @@
       }
     }
 
-    // Simple Client-Side Shield Check (Matches your vouch-shield.js logic)
+    // Client-Side Shield Check
     function clientSideCheck(message, businessType) {
-      const blockKeywords = ['who are you', 'what ai', 'python code', 'ignore previous', 'tell me a joke', 'weather'];
+      const blockKeywords = ['who are you', 'what ai', 'python code', 'ignore previous', 'tell me a joke', 'weather', 'calculator'];
       const lowerMsg = message.toLowerCase();
       
       for (let keyword of blockKeywords) {
@@ -196,7 +187,6 @@
       const message = input.value.trim();
       if (!message) return;
 
-      const apiKey = document.getElementById('apiKey').value.trim();
       const shieldEnabled = document.getElementById('shieldToggle').checked;
       const businessType = document.getElementById('businessType').value || 'business';
       const businessDesc = document.getElementById('businessDesc').value || 'A standard business';
@@ -214,13 +204,7 @@
         }
       }
 
-      // 2. Backend AI Call (If no API key, simulate)
-      if (!apiKey) {
-        addMessage("Please enter an API key to get real AI responses. (Simulating: Hello! How can I help with your " + businessType + "?)", 'bot');
-        updateStats(false);
-        return;
-      }
-
+      // 2. Backend AI Call (No API key needed in frontend, backend uses .env)
       try {
         addMessage("Thinking...", 'bot');
         const lastMsg = document.getElementById('chatContainer').lastChild;
@@ -230,7 +214,6 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: message,
-            apiKey: apiKey,
             businessType: businessType,
             businessDesc: businessDesc,
             shieldEnabled: shieldEnabled
@@ -240,12 +223,12 @@
         const data = await response.json();
         
         // Remove "Thinking..."
-        lastMsg.remove();
+        if(lastMsg && lastMsg.textContent.includes("Thinking...")) lastMsg.remove();
 
         if (data.success) {
           addMessage(data.response, 'bot');
         } else {
-          addMessage("Error: " + data.message, 'bot', true);
+          addMessage("Error: " + (data.error || data.message), 'bot', true);
         }
         updateStats(false);
 
