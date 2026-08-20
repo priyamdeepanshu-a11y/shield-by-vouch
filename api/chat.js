@@ -1,7 +1,8 @@
-// api/chat.js - Final Production Ready Version
+// api/chat.js - 100% FINAL PRODUCTION VERSION
+// Auto-Healing, Multi-Provider, Secure
 
 export default async function handler(req, res) {
-  // CORS Headers
+  // 1. CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -17,49 +18,53 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message, apiKey, businessType, businessDesc, shieldEnabled } = req.body;
+    const { message, businessType, businessDesc, apiKey: bodyApiKey } = req.body;
 
-    // API Key: Pehle body se lo (demo ke liye), nahi mila toh Vercel .env se lo
-    const userApiKey = apiKey || process.env.AI_API_KEY;
+    // 2. SECURE API KEY HANDLING
+    // Priority: Vercel Environment Variable (Production) > Request Body (Testing)
+    const apiKey = process.env.AI_API_KEY || bodyApiKey;
 
-    if (!userApiKey) {
-      return res.status(400).json({ error: 'API Key missing. Add AI_API_KEY in Vercel Environment Variables OR send in request body.' });
+    if (!apiKey || apiKey.trim() === '') {
+      return res.status(400).json({ 
+        error: 'API Key missing. Add AI_API_KEY in Vercel Environment Variables.' 
+      });
     }
+    
     if (!message) {
       return res.status(400).json({ error: 'Message is required.' });
     }
 
-    // 1. Auto-Detect Provider & Base URL
+    // 3. AUTO-DETECT PROVIDER & BASE URL
     let provider = 'openai';
     let baseUrl = 'https://api.openai.com/v1/chat/completions';
     let headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${userApiKey}`
+      'Authorization': `Bearer ${apiKey}`
     };
 
-    if (userApiKey.startsWith('gsk_')) {
+    if (apiKey.startsWith('gsk_')) {
       provider = 'groq';
       baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-    } else if (userApiKey.startsWith('sk-or-')) {
+    } else if (apiKey.startsWith('sk-or-')) {
       provider = 'openrouter';
       baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
       headers['HTTP-Referer'] = 'https://shield-by-vouch.vercel.app';
       headers['X-Title'] = 'Shield by Vouch';
-    } else if (userApiKey.startsWith('sk-ant-')) {
+    } else if (apiKey.startsWith('sk-ant-')) {
       provider = 'anthropic';
       baseUrl = 'https://api.anthropic.com/v1/messages';
-      headers['x-api-key'] = userApiKey;
+      headers['x-api-key'] = apiKey;
       headers['anthropic-version'] = '2023-06-01';
       delete headers['Authorization'];
-    } else if (userApiKey.startsWith('AIza')) {
+    } else if (apiKey.startsWith('AIza')) {
       provider = 'gemini';
-      baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${userApiKey}`;
+      baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
       headers = { 'Content-Type': 'application/json' };
     }
 
-    // 2. Auto-Healing Fallback Models
+    // 4. AUTO-HEALING FALLBACK MODELS
     const MODEL_FALLBACKS = {
-      groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
+      groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
       openai: ['gpt-4o-mini', 'gpt-3.5-turbo'],
       openrouter: ['meta-llama/llama-3.1-8b-instruct', 'mistralai/mistral-7b-instruct'],
       anthropic: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229'],
@@ -69,21 +74,21 @@ export default async function handler(req, res) {
 
     const targetModels = MODEL_FALLBACKS[provider] || MODEL_FALLBACKS.default;
 
-    // 3. Dynamic System Prompt
+    // 5. DYNAMIC SYSTEM PROMPT
     const systemPrompt = `You are a helpful AI assistant for a ${businessType || 'business'}. 
     Business Description: ${businessDesc || 'A standard business'}. 
     ONLY answer questions related to this business. If the user asks about your identity, coding, jokes, or anything unrelated, politely refuse and say you can only help with ${businessType || 'business'} related queries.`;
 
     let lastError = null;
 
-    // 4. Try Models with Auto-Fallback (The "Auto-Healing" Magic)
+    // 6. TRY MODELS WITH AUTO-FALLBACK (The Magic)
     for (const model of targetModels) {
       try {
-        console.log(`Trying model: ${model} for provider: ${provider}`);
+        console.log(`[Shield Backend] Trying model: ${model} for provider: ${provider}`);
         
         let requestBody = {};
 
-        // Provider-specific request formats
+        // Provider-specific formats
         if (provider === 'anthropic') {
           requestBody = {
             model: model,
@@ -96,7 +101,7 @@ export default async function handler(req, res) {
             generationConfig: { maxOutputTokens: 1024 }
           };
         } else {
-          // OpenAI, Groq, OpenRouter format
+          // OpenAI, Groq, OpenRouter
           requestBody = {
             model: model,
             messages: [
@@ -115,14 +120,14 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
-          console.warn(`Model ${model} failed: ${errData.error?.message || response.status}`);
+          console.warn(`[Shield Backend] Model ${model} failed: ${errData.error?.message || response.status}`);
           lastError = new Error(errData.error?.message || `Status ${response.status}`);
-          continue; // CRITICAL: Don't break, try the next model!
+          continue; // CRITICAL: Don't break! Try next model.
         }
 
         const data = await response.json();
         
-        // Provider-specific response parsing
+        // Parse response based on provider
         let aiReply = '';
         if (provider === 'anthropic') {
           aiReply = data.content?.[0]?.text || 'No response';
@@ -132,7 +137,7 @@ export default async function handler(req, res) {
           aiReply = data.choices?.[0]?.message?.content || 'No response';
         }
 
-        // SUCCESS! Return immediately.
+        // SUCCESS!
         return res.status(200).json({ 
           success: true, 
           response: aiReply,
@@ -141,22 +146,21 @@ export default async function handler(req, res) {
         });
 
       } catch (error) {
-        console.warn(`Model ${model} error: ${error.message}`);
+        console.warn(`[Shield Backend] Model ${model} error: ${error.message}`);
         lastError = error;
-        continue; // Try next model
+        continue; 
       }
     }
 
-    // All models failed
+    // ALL MODELS FAILED
     return res.status(500).json({ 
       success: false, 
-      error: 'All AI models failed. Please check your API key or try again later.',
-      details: lastError?.message,
-      tried_models: targetModels
+      error: 'All AI models failed. Please check your API key.',
+      details: lastError?.message
     });
 
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('[Shield Backend] Fatal Error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Internal server error.',
