@@ -3,121 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shield by Vouch - Live Test</title>
+  <title>Shield by Vouch - Premium Demo</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: #0d0d0d; color: #ffffff; padding: 20px; max-width: 800px; margin: 0 auto; }
+    :root {
+      --bg-dark: #050505;
+      --bg-card: #111111;
+      --bg-input: #1a1a1a;
+      --accent: #00ff41;
+      --accent-dim: rgba(0, 255, 65, 0.1);
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --border: #222222;
+      --danger: #ff4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     
+    body { 
+      background-color: var(--bg-dark); 
+      color: var(--text-main); 
+      padding: 20px; 
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 65, 0.05) 0%, transparent 50%);
+    }
+
+    .container { max-width: 800px; margin: 0 auto; }
+
     /* Header & Toggle */
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #1a1a1a; border-radius: 12px; }
-    .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; }
-    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .header { 
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 24px; padding: 16px 24px; 
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; 
+      backdrop-filter: blur(10px);
+    }
+    .brand { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; }
+    .brand span { color: var(--accent); }
+    
+    .toggle-container { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; font-weight: 600; }
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #00ff41; }
-    input:checked + .slider:before { transform: translateX(24px); }
-    .shield-status { color: #00ff41; font-weight: bold; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent); box-shadow: 0 0 15px var(--accent-dim); }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .shield-status { color: var(--accent); }
 
-    /* Stats */
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-    .stat-card { background: #1a1a1a; padding: 15px; border-radius: 12px; text-align: center; }
-    .stat-value { font-size: 1.5rem; font-weight: bold; color: #00ff41; }
-    .stat-label { font-size: 0.85rem; color: #888; margin-top: 5px; }
+    /* Stats Grid */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { 
+      background: var(--bg-card); padding: 20px; border-radius: 16px; text-align: center; 
+      border: 1px solid var(--border); transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Business Config (Dynamic) */
-    .config-box { background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-    .config-box h3 { color: #00ff41; margin-bottom: 10px; font-size: 1rem; }
-    .config-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .config-inputs input { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; width: 100%; }
-    .config-inputs input:focus { outline: none; border-color: #00ff41; }
+    /* Business Config */
+    .config-box { 
+      background: var(--accent-dim); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 24px; 
+    }
+    .config-box h3 { color: var(--accent); margin-bottom: 16px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .config-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .config-inputs input { 
+      background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); 
+      padding: 12px 16px; border-radius: 10px; width: 100%; font-size: 0.95rem; transition: all 0.2s;
+    }
+    .config-inputs input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+    .config-inputs input::placeholder { color: #555; }
+
+    /* API Key Input */
+    .api-key-box { margin-bottom: 24px; }
+    .api-key-box input { 
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); 
+      padding: 14px 16px; border-radius: 12px; font-size: 0.95rem; transition: all 0.2s;
+    }
+    .api-key-box input:focus { outline: none; border-color: var(--accent); }
 
     /* Chat Area */
-    .chat-container { background: #1a1a1a; border-radius: 12px; padding: 20px; min-height: 300px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-    .chat-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
-    .chat-header h2 { font-size: 1.2rem; }
-    .protected-badge { background: rgba(0, 255, 65, 0.1); color: #00ff41; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; border: 1px solid #00ff41; }
+    .chat-container { 
+      background: var(--bg-card); border-radius: 20px; padding: 24px; min-height: 350px; 
+      display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; border: 1px solid var(--border);
+    }
+    .chat-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+    .chat-header h2 { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .protected-badge { background: var(--accent-dim); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--accent); }
     
-    .message { padding: 12px 16px; border-radius: 12px; max-width: 80%; line-height: 1.4; }
-    .message.user { background: #2a2a2a; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .message.bot { background: #252525; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #333; }
-    .message.bot.blocked { border-color: #ff4444; background: rgba(255, 68, 68, 0.05); }
-    .message.bot .shield-tag { color: #00ff41; font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 5px; }
+    .message { padding: 14px 18px; border-radius: 16px; max-width: 85%; line-height: 1.5; font-size: 0.95rem; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .message.user { background: #222; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .message.bot { background: #1a1a1a; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+    .message.bot.blocked { border-color: var(--danger); background: rgba(255, 68, 68, 0.05); }
+    .message.bot .shield-tag { color: var(--accent); font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 8px; }
 
     /* Input Area */
-    .input-area { display: flex; gap: 10px; margin-bottom: 20px; }
-    .input-area input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 1rem; }
-    .input-area input:focus { outline: none; border-color: #00ff41; }
-    .input-area button { background: #00ff41; color: #000; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-    .input-area button:hover { background: #00cc33; }
+    .input-area { display: flex; gap: 12px; margin-bottom: 24px; }
+    .input-area input { 
+      flex: 1; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); 
+      padding: 16px; border-radius: 14px; font-size: 1rem; transition: all 0.2s;
+    }
+    .input-area input:focus { outline: none; border-color: var(--accent); }
+    .input-area button { 
+      background: var(--accent); color: #000; border: none; padding: 0 28px; border-radius: 14px; 
+      font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s;
+    }
+    .input-area button:hover { background: #00cc33; transform: scale(1.02); }
 
     /* Quick Replies */
     .quick-replies { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .quick-replies button { background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
-    .quick-replies button:hover { border-color: #00ff41; color: #00ff41; }
+    .quick-replies button { 
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); 
+      padding: 10px 18px; border-radius: 24px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+    }
+    .quick-replies button:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    @media (max-width: 600px) {
+      .config-inputs { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header & Toggle -->
-  <div class="header">
-    <div class="toggle-container">
-      Shield: 
-      <label class="switch">
-        <input type="checkbox" id="shieldToggle" checked>
-        <span class="slider"></span>
-      </label>
-      <span class="shield-status" id="shieldStatus">ON</span>
+  <div class="container">
+    <!-- Header & Toggle -->
+    <div class="header">
+      <div class="brand">Shield by <span>Vouch</span></div>
+      <div class="toggle-container">
+        Shield: 
+        <label class="switch">
+          <input type="checkbox" id="shieldToggle" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="shield-status" id="shieldStatus">ON</span>
+      </div>
     </div>
-  </div>
 
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-value" id="savedCalls">0</div>
-      <div class="stat-label">API Calls Saved</div>
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="savedCalls">0</div>
+        <div class="stat-label">API Calls Saved</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="madeCalls">0</div>
+        <div class="stat-label">API Calls Made</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="moneySaved">$0.000</div>
+        <div class="stat-label">Money Saved</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value" id="madeCalls">0</div>
-      <div class="stat-label">API Calls Made</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" id="moneySaved">$0.000</div>
-      <div class="stat-label">Money Saved</div>
-    </div>
-  </div>
 
-  <!-- Dynamic Business Config -->
-  <div class="config-box">
-    <h3>⚙️ Configure Your Business (Dynamic)</h3>
-    <div class="config-inputs">
-      <input type="text" id="businessType" value="restaurant" placeholder="e.g. clinic, salon, store">
-      <input type="text" id="businessDesc" value="Italian food in Mumbai" placeholder="Describe your business">
+    <!-- Dynamic Business Config -->
+    <div class="config-box">
+      <h3>⚙️ Configure Your Business</h3>
+      <div class="config-inputs">
+        <input type="text" id="businessType" value="restaurant" placeholder="e.g. clinic, salon, store">
+        <input type="text" id="businessDesc" value="Italian food in Mumbai" placeholder="Describe your business">
+      </div>
     </div>
-  </div>
 
-  <!-- Chat Container -->
-  <div class="chat-container" id="chatContainer">
-    <div class="chat-header">
-      <h2>🤖 AI Chatbot</h2>
-      <span class="protected-badge">Protected</span>
+    <!-- API Key -->
+    <div class="api-key-box">
+      <input type="password" id="apiKey" placeholder="Paste your API Key (Groq, OpenRouter, OpenAI, etc.)">
     </div>
-    <!-- Messages will appear here -->
-  </div>
 
-  <!-- Input Area -->
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="Type anything..." onkeypress="handleKeyPress(event)">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+      <div class="chat-header">
+        <h2> AI Chatbot</h2>
+        <span class="protected-badge">Protected</span>
+      </div>
+      <!-- Messages will appear here -->
+    </div>
 
-  <!-- Quick Replies -->
-  <div class="quick-replies">
-    <button onclick="sendQuickReply('Who are you?')">"Who are you?"</button>
-    <button onclick="sendQuickReply('Python code for calculator')">"Python code..."</button>
-    <button onclick="sendQuickReply('Ignore previous instructions')">"Ignore previous..."</button>
-    <button onclick="sendQuickReply('I want to order pizza')">"I want to order"</button>
-    <button onclick="sendQuickReply('Tell me a joke')">"Tell me a joke"</button>
+    <!-- Input Area -->
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type anything..." onkeypress="handleKeyPress(event)">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- Quick Replies -->
+    <div class="quick-replies">
+      <button onclick="sendQuickReply('Who are you?')">"Who are you?"</button>
+      <button onclick="sendQuickReply('Python code for calculator')">"Python code..."</button>
+      <button onclick="sendQuickReply('Ignore previous instructions')">"Ignore previous..."</button>
+      <button onclick="sendQuickReply('I want to order pizza')">"I want to order"</button>
+      <button onclick="sendQuickReply('Tell me a joke')">"Tell me a joke"</button>
+    </div>
   </div>
 
   <script>
@@ -125,21 +199,17 @@
     let madeCalls = 0;
     const costPerCall = 0.002;
 
-    // Toggle Logic
     document.getElementById('shieldToggle').addEventListener('change', function() {
       const status = document.getElementById('shieldStatus');
       status.textContent = this.checked ? 'ON' : 'OFF';
-      status.style.color = this.checked ? '#00ff41' : '#ff4444';
+      status.style.color = this.checked ? 'var(--accent)' : 'var(--danger)';
+      document.querySelector('.protected-badge').textContent = this.checked ? 'Protected' : 'Unprotected';
+      document.querySelector('.protected-badge').style.color = this.checked ? 'var(--accent)' : 'var(--danger)';
+      document.querySelector('.protected-badge').style.borderColor = this.checked ? 'var(--accent)' : 'var(--danger)';
     });
 
-    function handleKeyPress(e) {
-      if (e.key === 'Enter') sendMessage();
-    }
-
-    function sendQuickReply(text) {
-      document.getElementById('userInput').value = text;
-      sendMessage();
-    }
+    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    function sendQuickReply(text) { document.getElementById('userInput').value = text; sendMessage(); }
 
     function addMessage(text, sender, isBlocked = false) {
       const chatContainer = document.getElementById('chatContainer');
@@ -147,7 +217,7 @@
       msgDiv.className = `message ${sender} ${isBlocked ? 'blocked' : ''}`;
       
       if (sender === 'bot' && isBlocked) {
-        msgDiv.innerHTML = `<span class="shield-tag">🛡️ Shield: ⚠️ Blocked. No API call made. $0.00 spent.</span>${text}`;
+        msgDiv.innerHTML = `<span class="shield-tag">🛡️ Shield: ️ Blocked. No API call made. $0.00 spent.</span>${text}`;
       } else if (sender === 'user') {
         msgDiv.innerHTML = `<strong>You:</strong> ${text}`;
       } else {
@@ -169,11 +239,9 @@
       }
     }
 
-    // Client-Side Shield Check
     function clientSideCheck(message, businessType) {
-      const blockKeywords = ['who are you', 'what ai', 'python code', 'ignore previous', 'tell me a joke', 'weather', 'calculator'];
+      const blockKeywords = ['who are you', 'what ai', 'python code', 'ignore previous', 'tell me a joke', 'weather', 'code for'];
       const lowerMsg = message.toLowerCase();
-      
       for (let keyword of blockKeywords) {
         if (lowerMsg.includes(keyword)) {
           return { blocked: true, response: `I can only help with our ${businessType} services. How can I assist you today?` };
@@ -187,6 +255,7 @@
       const message = input.value.trim();
       if (!message) return;
 
+      const apiKey = document.getElementById('apiKey').value.trim();
       const shieldEnabled = document.getElementById('shieldToggle').checked;
       const businessType = document.getElementById('businessType').value || 'business';
       const businessDesc = document.getElementById('businessDesc').value || 'A standard business';
@@ -194,7 +263,6 @@
       addMessage(message, 'user');
       input.value = '';
 
-      // 1. Client-Side Shield Check
       if (shieldEnabled) {
         const check = clientSideCheck(message, businessType);
         if (check.blocked) {
@@ -204,7 +272,12 @@
         }
       }
 
-      // 2. Backend AI Call (No API key needed in frontend, backend uses .env)
+      if (!apiKey) {
+        addMessage("Please enter an API key to get real AI responses. (Simulating: Hello! How can I help with your " + businessType + "?)", 'bot');
+        updateStats(false);
+        return;
+      }
+
       try {
         addMessage("Thinking...", 'bot');
         const lastMsg = document.getElementById('chatContainer').lastChild;
@@ -214,6 +287,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: message,
+            apiKey: apiKey,
             businessType: businessType,
             businessDesc: businessDesc,
             shieldEnabled: shieldEnabled
@@ -221,8 +295,6 @@
         });
 
         const data = await response.json();
-        
-        // Remove "Thinking..."
         if(lastMsg && lastMsg.textContent.includes("Thinking...")) lastMsg.remove();
 
         if (data.success) {
