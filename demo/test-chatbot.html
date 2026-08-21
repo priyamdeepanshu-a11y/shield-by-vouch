@@ -6,20 +6,51 @@
   <title>Shield by Vouch — Live Demo</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --neon: #00ff41; --red: #ff0040; --bg: #0a0a0f; --card: #14141f; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --neon: #00ff41;
+      --red: #ff0040;
+      --orange: #ffaa00;
+      --bg: #0a0a0f;
+      --card: #14141f;
+      --text: #e0e0e0;
+      --muted: #667;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
-      color: #e0e0e0;
+      color: var(--text);
       min-height: 100vh;
       padding: 20px;
     }
-    .container { max-width: 600px; margin: 0 auto; }
 
-    h1 { text-align: center; font-size: 1.5rem; margin-bottom: 4px; }
-    h1 span { color: var(--neon); }
-    .subtitle { text-align: center; color: #667; font-size: 0.8rem; margin-bottom: 20px; }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+    }
+
+    h1 span {
+      color: var(--neon);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 20px;
+    }
 
     .toggle-bar {
       display: flex;
@@ -32,7 +63,12 @@
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 16px;
     }
-    .toggle-bar label { font-weight: 700; font-size: 1.1rem; }
+
+    .toggle-bar label {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
     .toggle-switch {
       position: relative;
       width: 60px;
@@ -43,7 +79,11 @@
       transition: 0.3s;
       flex-shrink: 0;
     }
-    .toggle-switch.active { background: var(--neon); }
+
+    .toggle-switch.active {
+      background: var(--neon);
+    }
+
     .toggle-switch::after {
       content: '';
       position: absolute;
@@ -55,12 +95,32 @@
       left: 3px;
       transition: 0.3s;
     }
-    .toggle-switch.active::after { left: 31px; }
-    .toggle-status { font-weight: 700; font-size: 0.9rem; min-width: 100px; text-align: center; }
-    .toggle-status.on { color: var(--neon); }
-    .toggle-status.off { color: var(--red); }
 
-    .stats { display: flex; gap: 10px; margin-bottom: 16px; }
+    .toggle-switch.active::after {
+      left: 31px;
+    }
+
+    .toggle-status {
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .toggle-status.on {
+      color: var(--neon);
+    }
+
+    .toggle-status.off {
+      color: var(--red);
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
     .stat-box {
       flex: 1;
       background: var(--card);
@@ -69,8 +129,17 @@
       padding: 14px 10px;
       text-align: center;
     }
-    .stat-box b { display: block; font-size: 1.3rem; color: var(--neon); }
-    .stat-box span { font-size: 0.7rem; color: #667; }
+
+    .stat-box b {
+      display: block;
+      font-size: 1.3rem;
+      color: var(--neon);
+    }
+
+    .stat-box span {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
 
     .config-box {
       background: var(--card);
@@ -79,8 +148,19 @@
       padding: 16px;
       margin-bottom: 16px;
     }
-    .config-box h3 { color: var(--neon); font-size: 0.9rem; margin-bottom: 12px; }
-    .config-row { display: flex; gap: 10px; margin-bottom: 10px; }
+
+    .config-box h3 {
+      color: var(--neon);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .config-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
     .config-row input {
       flex: 1;
       background: rgba(255,255,255,0.05);
@@ -91,7 +171,10 @@
       font-size: 0.9rem;
       outline: none;
     }
-    .config-row input::placeholder { color: #445; }
+
+    .config-row input::placeholder {
+      color: #445;
+    }
 
     .chat-box {
       background: var(--card);
@@ -103,6 +186,7 @@
       flex-direction: column;
       overflow: hidden;
     }
+
     .chat-header {
       padding: 14px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -110,35 +194,132 @@
       justify-content: space-between;
       align-items: center;
     }
-    .chat-header h3 { font-size: 1rem; }
+
+    .chat-header h3 {
+      font-size: 1rem;
+    }
+
     .badge {
       padding: 4px 12px;
       border-radius: 100px;
       font-size: 0.75rem;
       font-weight: 700;
     }
-    .badge.protected { background: rgba(0,255,65,0.1); color: var(--neon); border: 1px solid rgba(0,255,65,0.2); }
-    .badge.unprotected { background: rgba(255,0,64,0.1); color: var(--red); border: 1px solid rgba(255,0,64,0.2); }
 
-    .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .badge.protected {
+      background: rgba(0,255,65,0.1);
+      color: var(--neon);
+      border: 1px solid rgba(0,255,65,0.2);
+    }
 
-    .msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 0.88rem; line-height: 1.5; animation: pop 0.3s ease; word-break: break-word; }
-    @keyframes pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .badge.unprotected {
+      background: rgba(255,0,64,0.1);
+      color: var(--red);
+      border: 1px solid rgba(255,0,64,0.2);
+    }
 
-    .msg.user { align-self: flex-end; background: rgba(255,255,255,0.08); border-bottom-right-radius: 4px; }
-    .msg.bot { align-self: flex-start; background: rgba(0,255,65,0.08); border: 1px solid rgba(0,255,65,0.12); border-bottom-left-radius: 4px; color: #e0ffe8; }
-    .msg.shield { align-self: flex-start; background: rgba(255,170,0,0.08); border: 1px solid rgba(255,170,0,0.15); border-bottom-left-radius: 4px; color: #ffe8c0; }
-    .msg.error { align-self: flex-start; background: rgba(255,0,64,0.08); border: 1px solid rgba(255,0,64,0.15); border-bottom-left-radius: 4px; color: #ffd0d5; }
-    .msg.info { align-self: center; background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.1); color: #00f0ff; font-size: 0.8rem; }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-    .cost-tag { font-size: 0.72rem; margin-top: 4px; opacity: 0.7; }
+    .msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      animation: pop 0.3s ease;
+      word-break: break-word;
+    }
 
-    .typing { display: flex; gap: 4px; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 16px; border-bottom-left-radius: 4px; align-self: flex-start; width: fit-content; }
-    .typing span { width: 6px; height: 6px; border-radius: 50%; background: #445; animation: bounce 1.4s infinite ease-in-out both; }
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.08);
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.bot {
+      align-self: flex-start;
+      background: rgba(0,255,65,0.08);
+      border: 1px solid rgba(0,255,65,0.12);
+      border-bottom-left-radius: 4px;
+      color: #e0ffe8;
+    }
+
+    .msg.shield {
+      align-self: flex-start;
+      background: rgba(255,170,0,0.08);
+      border: 1px solid rgba(255,170,0,0.15);
+      border-bottom-left-radius: 4px;
+      color: #ffe8c0;
+    }
+
+    .msg.error {
+      align-self: flex-start;
+      background: rgba(255,0,64,0.08);
+      border: 1px solid rgba(255,0,64,0.15);
+      border-bottom-left-radius: 4px;
+      color: #ffd0d5;
+    }
+
+    .msg.info {
+      align-self: center;
+      background: rgba(0,240,255,0.05);
+      border: 1px solid rgba(0,240,255,0.1);
+      color: #00f0ff;
+      font-size: 0.8rem;
+    }
+
+    .cost-tag {
+      font-size: 0.72rem;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    .provider-tag {
+      font-size: 0.7rem;
+      margin-top: 4px;
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      width: fit-content;
+    }
+
+    .typing span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #445;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
     .typing span:nth-child(1) { animation-delay: 0s; }
     .typing span:nth-child(2) { animation-delay: 0.15s; }
     .typing span:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes bounce { 0%,80%,100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; background: var(--neon); } }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; background: var(--neon); }
+    }
 
     .input-area {
       padding: 12px 16px;
@@ -146,6 +327,7 @@
       display: flex;
       gap: 10px;
     }
+
     .input-area input {
       flex: 1;
       background: rgba(255,255,255,0.04);
@@ -156,7 +338,11 @@
       font-size: 0.95rem;
       outline: none;
     }
-    .input-area input::placeholder { color: #445; }
+
+    .input-area input::placeholder {
+      color: #445;
+    }
+
     .input-area button {
       background: var(--neon);
       color: #000;
@@ -168,10 +354,24 @@
       font-size: 0.95rem;
       transition: 0.2s;
     }
-    .input-area button:hover { filter: brightness(1.1); }
-    .input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .quick-tests { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; justify-content: center; }
+    .input-area button:hover {
+      filter: brightness(1.1);
+    }
+
+    .input-area button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .quick-tests {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      justify-content: center;
+    }
+
     .qbtn {
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.08);
@@ -182,7 +382,11 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .qbtn:hover { border-color: var(--neon); color: var(--neon); }
+
+    .qbtn:hover {
+      border-color: var(--neon);
+      color: var(--neon);
+    }
 
     @media (max-width: 640px) {
       .chat-box { height: 50vh; }
@@ -197,7 +401,7 @@
 
   <div class="container">
     <h1>🛡️ <span>Shield</span> Live Test</h1>
-    <p class="subtitle">Toggle Shield ON/OFF. Backend handles AI via Vercel.</p>
+    <p class="subtitle">Toggle Shield ON/OFF. Backend auto-selects best AI provider.</p>
 
     <div class="toggle-bar">
       <label>Shield:</label>
@@ -214,7 +418,7 @@
     <div class="config-box">
       <h3>⚙️ Configure Your Business</h3>
       <div class="config-row">
-        <input type="text" id="bizType" value="restaurant" placeholder="Business type (e.g. clinic, salon)">
+        <input type="text" id="bizType" value="restaurant" placeholder="Business type (e.g. clinic, salon, store)">
         <input type="text" id="bizDesc" value="Italian food in Mumbai" placeholder="Business description">
       </div>
     </div>
@@ -312,7 +516,6 @@
       showTyping();
 
       try {
-        // ===== FIX: Always send to backend. Backend has API key in env vars =====
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -327,11 +530,15 @@
         const data = await response.json();
         hideTyping();
 
+        // ===== FIX: Handle empty or missing reply =====
+        const replyText = data.reply || data.message || "⚠️ No response from AI. Please try again.";
+        const providerInfo = data.provider ? `<div class="provider-tag">via ${data.provider}${data.model ? ' / ' + data.model.split('/').pop() : ''}</div>` : '';
+
         if (data.blocked) {
           blocked++;
           updateStats();
           addMsg(
-            '<b>🛡️ Shield:</b> ' + escapeHtml(data.reply) +
+            '<b>🛡️ Shield:</b> ' + escapeHtml(replyText) +
             '<div class="cost-tag">🔴 Blocked. No API call made. $0.00 spent.</div>',
             'shield'
           );
@@ -341,14 +548,17 @@
           const shieldTag = data.shield === 'off'
             ? '<div class="cost-tag">🟢 Direct AI reply (Shield OFF). ~$0.002 spent.</div>'
             : '<div class="cost-tag">🟢 AI reply received. ~$0.002 spent.</div>';
-          addMsg('<b>Bot:</b> ' + escapeHtml(data.reply) + shieldTag, 'bot');
+          
+          // If backend sent error flag, show in orange/error style
+          const msgType = data.error ? 'error' : 'bot';
+          addMsg('<b>Bot:</b> ' + escapeHtml(replyText) + shieldTag + providerInfo, msgType);
         }
 
       } catch (err) {
         hideTyping();
         addMsg(
-          '<b>⚠️ Error:</b> ' + escapeHtml(err.message) +
-          '<br><small>Check: 1) Internet connection 2) Vercel deployment status 3) AI_API_KEY in Vercel env vars</small>',
+          '<b>⚠️ Network Error:</b> ' + escapeHtml(err.message) +
+          '<br><small>Check internet connection or try again in 30 seconds.</small>',
           'error'
         );
       } finally {
