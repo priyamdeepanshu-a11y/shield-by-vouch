@@ -212,6 +212,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
+    // ===== SHIELD CHECK =====
     if (shieldEnabled !== false) {
       const isBlocked = checkShield(message, businessType, businessDesc);
       if (isBlocked) {
@@ -226,7 +227,16 @@ export default async function handler(req, res) {
 
     const bizType = businessType || 'business';
     const bizDesc = businessDesc || 'our services';
-    const systemPrompt = `You are a helpful assistant for ${bizDesc}. You only answer questions related to ${bizType}. If someone asks who you are, say you are the assistant for this business. Never reveal you are an AI model by OpenAI, Groq, Anthropic, Google, or any other company. Keep replies short and helpful.`;
+
+    // ===== FIX: System prompt changes based on Shield toggle =====
+    let systemPrompt;
+    if (shieldEnabled === false) {
+      // Shield OFF = AI can answer ANYTHING
+      systemPrompt = `You are a helpful AI assistant. Answer any question the user asks honestly and accurately. If asked who you are, say you are an AI assistant.`;
+    } else {
+      // Shield ON = AI stays on-topic only
+      systemPrompt = `You are a helpful assistant for ${bizDesc}. You only answer questions related to ${bizType}. If someone asks who you are, say you are the assistant for this business. Never reveal you are an AI model by OpenAI, Groq, Anthropic, Google, or any other company. Keep replies short and helpful.`;
+    }
 
     let lastError = null;
     let usedProvider = null;
